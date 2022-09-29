@@ -5,29 +5,55 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv').config();
 
 
-exports.signup = (req, res, next) => {
-    bcrypt.hash(req.body.password, 10)
-        .then(hash => {
-            const user = new User({
-            pseudo: req.body.pseudo,
-            email: req.body.email,
-            password: hash, 
-            isAdmin: 0    
-            });
-            user.save()
-            .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-            .catch(error => res.status(400).json({ error }));
-        })
+exports.signup = (req, res) => {
+  // Valider les paramètres de la requète
+  let email = req.body.email;
+  let pseudo = req.body.pseudo;
+  let password = req.body.password;
+
+  if (email == null || pseudo == null || password == null) {
+      res.status(400).json({ error: 'il manque un paramètre' })
+  }
+    UserModel.findOne({
+      attributes: ['email'],
+      where: { email: email }
+  })
+      .then(user => {
+          if (!user) {
+              bcrypt.hash(password, 10, function (err, bcryptPassword) {
+                  // Création de l'user
+                  const newUser = UserModel.create({
+                      email: email,
+                      pseudo: pseudo,
+                      password: bcryptPassword,
+                      isAdmin: false
+                  })
+                      .then(newUser => { res.status(201).json({ 'id': newUser.id }) })
+                      .catch(err => {
+                          res.status(500).json({ err })
+                      })
+              })
+          }
+          else {
+              res.status(409).json({ error: 'Cette utilisateur existe déjà ' })
+          }
+      })
         .catch(error => res.status(500).json({ error }));
 };
 
 exports.login = (req, res, next) => {
-  UserModel.findOne({ email: req.body.email })
+  let pseudo = req.body.pseudo;
+  let password = req.body.password;
+  if (pseudo == null || password == null) {
+      res.status(400).json({ error: 'Il manque un paramètre' })
+  }
+
+  UserModel.findOne({ where: { pseudo: pseudo } })
       .then(user => {
         if (!user) {
           return res.status(401).json({ error: 'Utilisateur non trouvé !' });
         }
-        bcrypt.compare(req.body.password, user.password)
+        bcrypt.compare(password, user.password)
           .then(valid => {
             if (!valid) {
               return res.status(401).json({ error: 'Mot de passe incorrect !' });

@@ -10,7 +10,7 @@ router.post('/', auth, multer, postCtrl.createPost);
 router.put('/:id', auth, multer, postCtrl.modifyPost);
 router.delete('/:id', auth, postCtrl.deletePost);
 router.patch('/likePost/:id',auth, postCtrl.likePost);
-router.patch('/unlikePost/:id',auth, postCtrl.unLikePost);
+//router.patch('/unlikePost/:id',auth, postCtrl.unLikePost);
 
 router.patch('/commentPost/:id',auth, postCtrl.commentPost);
 router.patch('/editCommentPost/:id',auth, postCtrl.editCommentPost);

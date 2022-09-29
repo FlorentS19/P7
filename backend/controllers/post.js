@@ -1,5 +1,5 @@
 const PostModel = require('../models/Post');
-const req_token = require('../middleware/auth');
+const UserModel = require("../models/User");
 const fs = require('fs');
 
 exports.readPost = (req, res, next) => {
@@ -13,10 +13,10 @@ exports.readPost = (req, res, next) => {
 }
 
 exports.createPost = (req, res, next) => {
-  const postObject = JSON.parse(req.body.post);
-  delete postObject._id;
-  const post = new Post({
-    posterId: req.body.posterId,
+  //const postObject = JSON.parse(req.body.post);
+  //delete postObject._id;
+  const post = new PostModel({
+    userId: req.body.userId,
     message: req.body.message,
     picture: req.file !== undefined ? `${req.protocol}://${req.get("host")}/images/${file}`:"",
     video: req.body.video,
@@ -33,99 +33,65 @@ exports.createPost = (req, res, next) => {
 };
 
 exports.modifyPost = (req, res, next) => {
-  if (!ObjectID.isValid(req.params.id)) {
-    return res.status(400).json('ID Unknown : ' + req.params.id);
-} else {
-    const updatedRecord = {
-        message: req.body.message
-    }
-    PostModel.findByIdAndUpdate(
-        req.params.id,
-        { $set: updatedRecord },
-        { new: true },
-        (error, docs) => {
-            if (!error) {
-                res.send(docs);
-            } else {
-                console.log("Update error : " + error);
-            }
+  PostModel.findOne({ _id: req.params.id })
+    .then((post) => {
+      const postObject = req.file ?
+        {
+          ...JSON.parse(req.body.post),
+          imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        } : { ...req.body };
+        if (UserModel.userId === PostModel.userId) {
+          PostModel.updateOne({ _id: req.params.id }, { ...postObject, _id: req.params.id })
+          .then(() => res.status(200).json({ message: 'Objet modifié !'}))
+          .catch(error => res.status(400).json({ error }));
+        } else {
+            res.status(401).json({ error: "vous n'êtes pas autorisé à modifier cette sauce" });
         }
-    )
-}
+      })
+    .catch(error => res.status(500).json({ error }));  
 };
 
 exports.deletePost = (req, res, next) => {
-  if (!ObjectID.isValid(req.params.id)) {
-    return res.status(400).json('ID Unknown : ' + req.params.id);
-  } else {
-    PostModel.findOne({ _id : req.params.id})
-    .then((post) => {
-        if (!post) {
-            res.status(404).json({error: new Error('Post non trouvé !')});
-          }
-        const filename = post.picture.split('/images/')[1];
-        
-        fs.unlink(`./images/${filename}`, () => {
-            PostModel.deleteOne({ _id: req.params.id }) 
-                .then(() => res.status(200).json({ message: 'Post supprimé !'}))
-                .catch(error => res.status(400).json({ error }));
-        });
-    })
-}
+  PostModel.findOne({ _id : req.params.id})
+  .then((post) => {
+    if (PostModel.userId === req.token.userId) {
+      const filename = post.imageUrl.split('/images/')[1];
+      fs.unlink(`images/${filename}`, () => {
+        PostModel.deleteOne({ _id: req.params.id })
+          .then(() => res.status(200).json({ message: 'Objet supprimé !'}))
+          .catch(error => res.status(400).json({ error }));
+      });
+    } else {
+      res.status(401).json({ error: "vous n'êtes pas autorisé à supprimer cette sauce" });
+    }
+  })
+  .catch(error => res.status(500).json({ error }));
 };
 
-exports.likePost = async (req, res, next) => {
-  if (!ObjectID.isValid(req.params.id)) {
-      return res.status(400).json('ID Unknown : ' + req.params.id);
-  } else {
-      try {
-          await PostModel.findByIdAndUpdate(
-              req.params.id,
-              {
-                  $addToSet: { likers: req.body.id }
-              },
-              { new : true },
-          );
-          await UserModel.findByIdAndUpdate(
-              req.body.id,
-              {
-                  $addToSet: { likes: req.params.id}
-              },
-              { new : true },
-          )
-          return res.status(200).send('OK');
-      }
-      catch (error) {
-          console.log(error)
-          return res.status(400).send(error);
-      }
-  }
-}
+exports.likePost = (req, res, next) => {
+  let like = req.body.like
+  let userId = req.body.userId
+  let postId = req.params.id
+  
+  switch (like) {
+    case 1 :
+      PostModel.updateOne({ _id: postId }, { $push: { usersLiked: userId }, $inc: { likes: +1 }})
+          .then(() => res.status(200).json({ message: `J'aime` }))
+          .catch((error) => res.status(400).json({ error }))
+            
+      break;
 
-exports.unLikePost = async (req, res, next) => {
-  if (!ObjectID.isValid(req.params.id)) {
-      return res.status(400).json('ID Unknown : ' + req.params.id);
-  } else {
-      try {
-          await PostModel.findByIdAndUpdate(
-              req.params.id,
-              {
-                  $pull: { likers: req.body.id }
-              },
-              { new : true },
-          );
-          await UserModel.findByIdAndUpdate(
-              req.body.id,
-              {
-                  $pull: { likes: req.params.id}
-              },
-              { new : true },
-          )
-          return res.status(200).send('OK');
-      }
-      catch (error) {
-          return res.status(400).send(error);
-      }
+    case 0 :
+      PostModel.findOne({ _id: postId })
+           .then((post) => {
+            if (post.usersLiked.includes(userId)) { 
+              PostModel.updateOne({ _id: postId }, { $pull: { usersLiked: userId }, $inc: { likes: -1 }})
+                .then(() => res.status(200).json({ message: `Neutre` }))
+                .catch((error) => res.status(400).json({ error }))
+            }
+          })
+          .catch((error) => res.status(404).json({ error }))
+      break;
   }
 }
 
