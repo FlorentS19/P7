@@ -7,12 +7,13 @@ export const login = (formData , navigate ) => async (dispatch) => {
     const { data } = await api.login(formData);
     dispatch({ type: AUTH, data });
     navigate('/post');
-
+    
   } catch (error) {
    alert ( "Vérifier votre Pseudo et/ou Mot de Passe" ) ;
     console.log(error.message);
   }
 };
+
 
 export const signup = (formData , navigate ) => async (dispatch) => {
   try {

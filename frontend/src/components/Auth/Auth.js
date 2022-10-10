@@ -50,7 +50,6 @@ const SignUp = () => {
             )}
             <Input name="pseudo" label="Pseudo" handleChange={handleChange} />
             <Input name="password" label="Mot de passe" handleChange={handleChange} type={showPassword ? 'text' : 'password'} handleShowPassword={handleShowPassword} />
-            { isSignup && <Input name="confirmPassword" label="Confirmez mot de passe" handleChange={handleChange} type="password" /> }
           </Grid>
           <Button type="submit" fullWidth variant="contained" color="primary" className={classes.submit}>
             { isSignup ? "S'inscrire" : 'Se Connecter' }

@@ -45,3 +45,6 @@ server.on('listening', () => {
 });
 
 server.listen(port);
+
+const cors = require('cors');
+app.use(cors());
