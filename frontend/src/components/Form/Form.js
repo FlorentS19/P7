@@ -33,7 +33,7 @@ import useStyles from './styles';
       clear();
   };
 
-  if(!user?.result?.name) {
+  /*if(!user?.result?.name) {
     return(
         <Paper className={classes.paperAuth}>
             <h2 align="center">
@@ -41,7 +41,7 @@ import useStyles from './styles';
             </h2>
         </Paper>
     )
-}
+}*/
 
   return (
     <Paper className={classes.paper}>

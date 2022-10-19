@@ -10,7 +10,7 @@ import moment from 'moment';
 
 import { likePost, deletePost } from '../../../actions/posts';
 import useStyles from './styles';
-import 'moment/locale/fr' 
+import 'moment/locale/fr'
 moment.locale('fr')
 
 const Post = ({ post, setCurrentId }) => {
@@ -21,15 +21,15 @@ const Post = ({ post, setCurrentId }) => {
   const Likes = () => {
     if (post.likes.length > 0) {
 
-      return post.likes.find((like) => like === ( user?.result?._id))
+      return post.likes.find((like) => like === (user?.result?._id))
         ? (
-          <><ThumbUpIcon fontSize="medium" />&nbsp;{post.likes.length >= 2 ? `Vous et ${post.likes.length - 1} autres` : `${post.likes.length} J'aime${post.likes.length > 1 ? 's' : ''}` }</>
+          <><ThumbUpIcon fontSize="medium" />&nbsp;{post.likes.length >= 2 ? `Vous et ${post.likes.length - 1} autres` : `${post.likes.length} J&apos;aime${post.likes.length > 1 ? 's' : ''}` }</>
         ) : (
-          <><ThumbUpOutlined fontSize="medium" />&nbsp;{post.likes.length} {post.likes.length === 1 ? "J'aime" : "J'aimes"}</>
+          <><ThumbUpOutlined fontSize="medium" />&nbsp;{post.likes.length} {post.likes.length === 1 ? "J&apos;aime" : "J&apos;aimes"}</>
         );
     }
 
-    return <><ThumbUpOutlined fontSize="medium" />&nbsp;J'aime</>;
+    return <><ThumbUpOutlined fontSize="medium" />&nbsp;J&apos;aime</>;
   };
 
   return (

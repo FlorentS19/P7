@@ -13,6 +13,7 @@ export const login = (formData , navigate ) => async (dispatch) => {
     console.log(error.message);
   }
 };
+console.log(login)
 
 
 export const signup = (formData , navigate ) => async (dispatch) => {
